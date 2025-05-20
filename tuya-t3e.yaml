@@ -1,0 +1,15 @@
+esphome:
+  name: tuya-t3e-test
+  friendly_name: T3E Panel
+
+logger:
+  level: INFO
+  # baud_rate: 0 # serial log off
+
+substitutions:
+  home_page: lighting_1
+
+packages:
+  common: !include common.yaml
+  device: !include devices/TUYA-T3E.yaml
+  layout: !include layouts/480x480.yaml

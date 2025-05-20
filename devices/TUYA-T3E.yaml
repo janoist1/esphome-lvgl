@@ -1,0 +1,157 @@
+esphome:
+  platformio_options:
+    upload_speed: 921600
+    board_build.flash_mode: dio
+    board_build.f_flash: 80000000L
+    board_build.f_cpu: 240000000L
+
+esp32:
+  board: esp32-s3-devkitc-1
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: y
+      CONFIG_ESP32S3_DATA_CACHE_64KB: y
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: y
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+# spi:
+#   clk_pin: GPIO2
+#   mosi_pin: GPIO1
+
+output:
+  - id: gpio_backlight_pwm
+    platform: ledc
+    pin: 42
+
+  - id: relay_l1
+    platform: gpio
+    pin: 45
+    inverted: true
+
+  - id: relay_l2
+    platform: gpio
+    pin: 46
+    inverted: true
+
+  - id: relay_l3
+    platform: gpio
+    pin: 44
+    inverted: true
+
+switch:
+  - platform: output
+    name: "Relay L1"
+    id: relay_switch_l1
+    output: relay_l1
+    restore_mode: ALWAYS_OFF
+
+  - platform: output
+    name: "Relay L2"
+    id: relay_switch_l2
+    output: relay_l2
+    restore_mode: ALWAYS_OFF
+
+  - platform: output
+    name: "Relay L3"
+    id: relay_switch_l3
+    output: relay_l3
+    restore_mode: ALWAYS_OFF
+
+light:
+  - id: backlight
+    name: Backlight
+    platform: monochromatic
+    output: gpio_backlight_pwm
+    restore_mode: ALWAYS_ON
+
+i2c:
+  id: bus_a
+  sda: GPIO7
+  scl: GPIO6
+  frequency: 400kHz
+
+spi:
+  - id: lcd_spi
+    clk_pin: 
+      number: GPIO15
+      allow_other_uses: true
+    mosi_pin: 
+      number: GPIO48
+      allow_other_uses: true
+    
+display:
+  - platform: st7701s
+    update_interval: never
+    auto_clear_enabled: false
+    spi_mode: MODE3
+    data_rate: 2MHz
+    color_order: RGB
+    invert_colors: true
+    dimensions:
+      width: 480
+      height: 480
+    reset_pin: 
+      number: 4
+      allow_other_uses: true
+    cs_pin: 
+      number: 4
+      allow_other_uses: true
+    de_pin: 40
+    hsync_pin: 38
+    vsync_pin: 39
+    pclk_pin: 41
+    pclk_frequency: 12MHz
+    pclk_inverted: false
+    hsync_pulse_width: 8
+    hsync_front_porch: 10
+    hsync_back_porch: 50
+    vsync_pulse_width: 8
+    vsync_front_porch: 10
+    vsync_back_porch: 20
+    init_sequence:
+      - 1
+      - [ 0xE0, 0x1F ]  # Set sunlight readable enhancement
+    data_pins:
+      red:
+        - 8         #r1 29
+        - 18        #r2 30
+        - 17        #r3 31
+        - 16        #r4 32 
+        - 0         #r5 33 
+      green:
+        - 13        #g0 22
+        - 12        #g1 23
+        - 11        #g2 24
+        - 10        #g3 25
+        - 9         #g4 26
+        - 3         #g5 27
+      blue:
+        - number: 15        #b2 17
+          allow_other_uses: true   
+        - number: 48        #b3 18
+          allow_other_uses: true   
+        - 47        #b4 19 
+        - 21        #b5 20  
+        - 14        #b6 21  
+
+touchscreen:
+  - platform: gt911
+    i2c_id: bus_a
+    address: 0x5D
+    update_interval: 50ms
+    calibration:
+      x_min: 0
+      x_max: 480
+      y_min: 0
+      y_max: 480
+    # on_touch:
+    #   - then:
+    #       - lambda: |-
+    #           ESP_LOGI("touch", "X: %d, Y: %d", touch.x, touch.y);
