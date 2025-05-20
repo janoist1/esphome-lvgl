@@ -1,0 +1,228 @@
+esphome:
+  name: guition-35-test
+  friendly_name: Perczel Okos Panel
+
+logger:
+  level: INFO
+  baud_rate: 0 # serial log off
+
+substitutions:
+  home_page: lighting_1
+
+packages:
+  common: !include common.yaml
+  device: !include devices/JC3248W535-my.yaml
+  layout: !include layouts/480x320.yaml
+
+i2c:
+  - id: bus_sensor
+    sda: 17
+    scl: 18
+    frequency: 1kHz
+    sda_pullup_enabled: true
+    scl_pullup_enabled: true
+
+pcf8574:
+  - id: pcf8575_hub
+    i2c_id: bus_sensor
+    address: 0x20
+    pcf8575: true
+
+switch:
+  - platform: gpio
+    id: relay_1
+    name: "Relé 1"
+    pin:
+      pcf8574: pcf8575_hub
+      number: 0
+      mode: output
+      inverted: true
+  - platform: gpio
+    id: relay_2
+    name: "Relé 2"
+    pin:
+      pcf8574: pcf8575_hub
+      number: 1
+      mode: output
+      inverted: true
+  - platform: gpio
+    id: relay_3
+    name: "Relé 3"
+    pin:
+      pcf8574: pcf8575_hub
+      number: 5
+      mode: output
+      inverted: true
+
+binary_sensor:
+  - platform: gpio
+    name: "Kapcsoló 1"
+    pin:
+      pcf8574: pcf8575_hub
+      number: 2
+      mode: input
+      inverted: true
+    filters:
+      - delayed_on_off: 1ms
+    on_state:
+      then:
+        - switch.toggle: relay_1
+        - lambda: |-
+            ESP_LOGI("sensor", "Sensor 1 state: %s", x ? "ON" : "OFF");
+  - platform: gpio
+    name: "Kapcsoló 2"
+    pin:
+      pcf8574: pcf8575_hub
+      number: 3
+      mode: input
+      inverted: true
+    filters:
+      - delayed_on_off: 1ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGI("sensor", "Sensor 2 state: %s", x ? "ON" : "OFF");
+  - platform: gpio
+    name: "Kapcsoló 3"
+    pin:
+      pcf8574: pcf8575_hub
+      number: 4
+      mode: input
+      inverted: true
+    filters:
+      - delayed_on_off: 1ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGI("sensor", "Sensor 3 state: %s", x ? "ON" : "OFF");
+
+sensor:
+# # DHT11 Szenzor
+#   - platform: dht
+#     pin:
+#       pcf8574: pcf8575_hub
+#       number: 10
+#     temperature:
+#       name: "Hőmérséklet"
+#     humidity:
+#       name: "Páratartalom"
+#     model: DHT11
+#     update_interval: 10s
+
+# BMP280 (ESP I2C-n)
+  - platform: bmp280_i2c
+    i2c_id: bus_sensor
+    temperature:
+      name: "BMP280 Hőmérséklet"
+    pressure:
+      name: "Légnyomás"
+    address: 0x76
+    update_interval: 10s
+
+# # LDR fényérzékelő (ESP32 ADC-n)
+#   - platform: adc
+#     pin: 34
+#     name: "Fényerő"
+#     update_interval: 1s
+
+# output:
+#   - platform: gpio
+#     pin: GPIO17
+#     id: gpio17
+#   - platform: gpio
+#     pin: GPIO18
+#     id: gpio18
+
+# switch:
+#   - platform: output
+#     name: "GPIO17 Test"
+#     output: gpio17
+#   - platform: output
+#     name: "GPIO18 Test"
+#     output: gpio18
+
+api:
+  services:
+    - service: add_scene_button
+      variables:
+        button_id: string
+        button_name: string
+        scene_id: string
+      then:
+        - lambda: |-
+            // Add a new button to the scenes page using the existing widget
+            auto scenes_page = id(scenes_page);
+            if (scenes_page) {
+              auto container = scenes_page->get_widget<lvgl::Container>("scenes_container");
+              if (container) {
+                auto button = new lvgl::Button(container);
+                button->set_size(114, 75); // Standard button size
+                button->set_text(id(button_name).c_str());
+                button->set_text_font("roboto_md");
+                button->set_text_align(lvgl::TextAlign::BOTTOM_LEFT);
+                
+                // Add click handler
+                button->add_event_callback([](lv_event_t *e) {
+                  if (e->code == LV_EVENT_CLICKED) {
+                    // Trigger the scene in Home Assistant
+                    id(api).send_homeassistant_service_call("scene.turn_on", {
+                      {"entity_id", "scene." + std::string(lv_event_get_user_data(e))}
+                    });
+                  }
+                }, LV_EVENT_CLICKED, id(scene_id).c_str());
+              }
+            }
+
+    - id: lighting_3
+      <<: *page_styles
+      on_load:
+        - lvgl.label.update:
+            id: page_title
+            text: Outside Lighting
+      widgets:
+        - obj:
+            <<: *container_styles
+            layout:
+              <<: *button_layout
+            widgets:
+              - button: # outdoor lights
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/light_group_buttons/widget.yaml
+                    vars:
+                      uid: all_outside_lights
+                      entity_id: light.all_outside_lights
+                      text: Outside Lights
+                      <<: *wide_button_widget_vars
+
+              - button: # door lights
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/light_buttons/widget.yaml
+                    vars:
+                      uid: outside_light_1
+                      entity_id: light.outside_light_1
+                      text: Door Lights
+                      <<: *button_widget_vars
+
+              - button: # deck lights
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/light_buttons/widget.yaml
+                    vars:
+                      uid: outside_light_2
+                      entity_id: light.outside_light_2
+                      text: Deck Lights
+                      <<: *button_widget_vars
+
+    - id: scenes_page
+      <<: *page_styles
+      on_load:
+        - lvgl.label.update:
+            id: page_title
+            text: Scenes
+      widgets:
+        - obj:
+            id: scenes_container
+            <<: *container_styles
+            layout:
+              <<: *button_layout
+            widgets:
+              # Dynamic buttons will be added here
