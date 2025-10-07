@@ -11,14 +11,14 @@ substitutions:
 
 packages:
   common: !include common.yaml
-  device: !include devices/JC3248W535-my.yaml
+  device: !include devices/JC3248W535.yaml
   layout: !include layouts/480x320.yaml
 
 i2c:
   - id: bus_sensor
     sda: 17
     scl: 18
-    frequency: 1kHz
+    frequency: 100kHz
     sda_pullup_enabled: true
     scl_pullup_enabled: true
 
@@ -141,88 +141,88 @@ sensor:
 #     name: "GPIO18 Test"
 #     output: gpio18
 
-api:
-  services:
-    - service: add_scene_button
-      variables:
-        button_id: string
-        button_name: string
-        scene_id: string
-      then:
-        - lambda: |-
-            // Add a new button to the scenes page using the existing widget
-            auto scenes_page = id(scenes_page);
-            if (scenes_page) {
-              auto container = scenes_page->get_widget<lvgl::Container>("scenes_container");
-              if (container) {
-                auto button = new lvgl::Button(container);
-                button->set_size(114, 75); // Standard button size
-                button->set_text(id(button_name).c_str());
-                button->set_text_font("roboto_md");
-                button->set_text_align(lvgl::TextAlign::BOTTOM_LEFT);
+# api:
+#   services:
+#     - service: add_scene_button
+#       variables:
+#         button_id: string
+#         button_name: string
+#         scene_id: string
+#       then:
+#         - lambda: |-
+#             // Add a new button to the scenes page using the existing widget
+#             auto scenes_page = id(scenes_page);
+#             if (scenes_page) {
+#               auto container = scenes_page->get_widget<lvgl::Container>("scenes_container");
+#               if (container) {
+#                 auto button = new lvgl::Button(container);
+#                 button->set_size(114, 75); // Standard button size
+#                 button->set_text(id(button_name).c_str());
+#                 button->set_text_font("roboto_md");
+#                 button->set_text_align(lvgl::TextAlign::BOTTOM_LEFT);
                 
-                // Add click handler
-                button->add_event_callback([](lv_event_t *e) {
-                  if (e->code == LV_EVENT_CLICKED) {
-                    // Trigger the scene in Home Assistant
-                    id(api).send_homeassistant_service_call("scene.turn_on", {
-                      {"entity_id", "scene." + std::string(lv_event_get_user_data(e))}
-                    });
-                  }
-                }, LV_EVENT_CLICKED, id(scene_id).c_str());
-              }
-            }
+#                 // Add click handler
+#                 button->add_event_callback([](lv_event_t *e) {
+#                   if (e->code == LV_EVENT_CLICKED) {
+#                     // Trigger the scene in Home Assistant
+#                     id(api).send_homeassistant_service_call("scene.turn_on", {
+#                       {"entity_id", "scene." + std::string(lv_event_get_user_data(e))}
+#                     });
+#                   }
+#                 }, LV_EVENT_CLICKED, id(scene_id).c_str());
+#               }
+#             }
 
-    - id: lighting_3
-      <<: *page_styles
-      on_load:
-        - lvgl.label.update:
-            id: page_title
-            text: Outside Lighting
-      widgets:
-        - obj:
-            <<: *container_styles
-            layout:
-              <<: *button_layout
-            widgets:
-              - button: # outdoor lights
-                  <<: !include
-                    file: widgets/buttons/icon_text_buttons/light_group_buttons/widget.yaml
-                    vars:
-                      uid: all_outside_lights
-                      entity_id: light.all_outside_lights
-                      text: Outside Lights
-                      <<: *wide_button_widget_vars
+#     - id: lighting_3
+#       <<: *page_styles
+#       on_load:
+#         - lvgl.label.update:
+#             id: page_title
+#             text: Outside Lighting
+#       widgets:
+#         - obj:
+#             <<: *container_styles
+#             layout:
+#               <<: *button_layout
+#             widgets:
+#               - button: # outdoor lights
+#                   <<: !include
+#                     file: widgets/buttons/icon_text_buttons/light_group_buttons/widget.yaml
+#                     vars:
+#                       uid: all_outside_lights
+#                       entity_id: light.all_outside_lights
+#                       text: Outside Lights
+#                       <<: *wide_button_widget_vars
 
-              - button: # door lights
-                  <<: !include
-                    file: widgets/buttons/icon_text_buttons/light_buttons/widget.yaml
-                    vars:
-                      uid: outside_light_1
-                      entity_id: light.outside_light_1
-                      text: Door Lights
-                      <<: *button_widget_vars
+#               - button: # door lights
+#                   <<: !include
+#                     file: widgets/buttons/icon_text_buttons/light_buttons/widget.yaml
+#                     vars:
+#                       uid: outside_light_1
+#                       entity_id: light.outside_light_1
+#                       text: Door Lights
+#                       <<: *button_widget_vars
 
-              - button: # deck lights
-                  <<: !include
-                    file: widgets/buttons/icon_text_buttons/light_buttons/widget.yaml
-                    vars:
-                      uid: outside_light_2
-                      entity_id: light.outside_light_2
-                      text: Deck Lights
-                      <<: *button_widget_vars
+#               - button: # deck lights
+#                   <<: !include
+#                     file: widgets/buttons/icon_text_buttons/light_buttons/widget.yaml
+#                     vars:
+#                       uid: outside_light_2
+#                       entity_id: light.outside_light_2
+#                       text: Deck Lights
+#                       <<: *button_widget_vars
 
-    - id: scenes_page
-      <<: *page_styles
-      on_load:
-        - lvgl.label.update:
-            id: page_title
-            text: Scenes
-      widgets:
-        - obj:
-            id: scenes_container
-            <<: *container_styles
-            layout:
-              <<: *button_layout
-            widgets:
-              # Dynamic buttons will be added here
+#     - id: scenes_page
+#       <<: *page_styles
+#       on_load:
+#         - lvgl.label.update:
+#             id: page_title
+#             text: Scenes
+#       widgets:
+#         - obj:
+#             id: scenes_container
+#             <<: *container_styles
+#             layout:
+#               <<: *button_layout
+#             widgets:
+#               # Dynamic buttons will be added here

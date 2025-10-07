@@ -29,7 +29,8 @@ spi:
     data_pins: [21, 48, 40, 39]
 
 i2c:
-  - sda: 4
+  - id: bus_touchscreen
+    sda: 4
     scl: 8
 
 output:
@@ -51,10 +52,29 @@ display:
     data_rate: 40MHz
     update_interval: never
     auto_clear_enabled: false
+    # platform: qspi_dbi
+    # dimensions:
+    #   height: 480
+    #   width: 320
+    # model: CUSTOM
+    # data_rate: 40MHz
+    # cs_pin:
+    #   number: 45
+    #   ignore_strapping_warning: true
+    # draw_from_origin: true
+    # update_interval: never
+    # auto_clear_enabled: false
+    # # rotation: 270
 
 touchscreen:
   - id: main_touchscreen
     platform: axs15231
+    i2c_id: bus_touchscreen
+    address: 0x3B
+    # transform:
+    #   swap_xy: true
+    #   mirror_x: true
+    #   mirror_y: false
     # on_touch:
     #   - lambda: |-
     #         ESP_LOGI("cal", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
