@@ -59,6 +59,21 @@ script:
     then:
       - lvgl.page.show: ${home_page}
 
+# variable display_timeout used to turn off backlight after inactivity
+#https://esphome.io/cookbook/lvgl#turn-off-screen-when-idle     
+number:
+  - platform: template
+    name: LVGL Screen timeout
+    optimistic: true
+    id: display_timeout
+    unit_of_measurement: "s"
+    initial_value: 15
+    restore_value: true
+    min_value: 10
+    max_value: 180
+    step: 5
+    mode: box
+
 lvgl:
   default_font: roboto_md
   theme: !include themes/main.yaml
@@ -493,6 +508,13 @@ lvgl:
                       uid: printer_6
                       name: 6 - Pebbles
                       <<: *printer_widget_vars
+  #to turn off backlight after inactivity
+  on_idle:
+    timeout: !lambda "return (id(display_timeout).state * 1000);"
+    then:
+      - logger.log: "LVGL is idle"
+      - light.turn_off: backlight
+      - lvgl.pause:
 
 packages:
   # header

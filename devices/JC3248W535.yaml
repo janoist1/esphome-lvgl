@@ -89,3 +89,16 @@ touchscreen:
     #           touch.x_raw,
     #           touch.y_raw
     #         );
+    on_release:
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - logger.log: "LVGL resuming from backlight off"
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+            - light.turn_on: backlight          
+            # - homeassistant.action: # trigger a home assistant action after waking up the display 
+            #     action: light.toggle
+            #     data:
+            #         entity_id: light.bedroom
+            #         brightness_pct: '30'
