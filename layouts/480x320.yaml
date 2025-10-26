@@ -449,6 +449,78 @@ lvgl:
                       text: Deck Lights
                       <<: *button_widget_vars
 
+    - id: all
+      <<: *page_styles
+      on_load:
+        - lvgl.label.update:
+            id: page_title
+            text: Osszes lehetoseg
+      widgets:
+        - obj:
+            <<: *container_styles
+            layout:
+              <<: *button_layout
+            widgets:
+              - button: # relay 1 - lamp switch 1
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/stateful.yaml
+                    vars:
+                      uid: relay_1
+                      icon_on: "\U000F0425"
+                      icon_off: "\U000F0425"
+                      text: 4 lampa
+                      <<: *button_widget_vars
+                  on_short_click:
+                    - switch.toggle: relay_1
+
+              - button: # relay 2 - lamp switch 2
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/stateful.yaml
+                    vars:
+                      uid: relay_2
+                      icon_on: "\U000F0425"
+                      icon_off: "\U000F0425"
+                      text: Magas lampa
+                      <<: *button_widget_vars
+                  on_short_click:
+                    - switch.toggle: relay_2
+
+              - button: # relay 3 - thermostat
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/stateful.yaml
+                    vars:
+                      uid: relay_3
+                      icon_on: "\U000F02CB"
+                      icon_off: "\U000F02CB"
+                      text: Kazan
+                      <<: *button_widget_vars
+                  on_short_click:
+                    - switch.toggle: relay_3
+
+              - button: # virtual light 1 - Home Assistant light
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/stateful.yaml
+                    vars:
+                      uid: virtual_light_1
+                      icon_on: "\U000F0425"
+                      icon_off: "\U000F0425"
+                      text: Konyha folyoso
+                      <<: *button_widget_vars
+                  on_short_click:
+                    - script.execute: toggle_konyha_folyoso
+
+              - button: # virtual light 2 - Home Assistant light
+                  <<: !include
+                    file: widgets/buttons/icon_text_buttons/stateful.yaml
+                    vars:
+                      uid: virtual_light_2
+                      icon_on: "\U000F0425"
+                      icon_off: "\U000F0425"
+                      text: Nappali eloszto
+                      <<: *button_widget_vars
+                  on_short_click:
+                    - script.execute: toggle_nappali_eloszto
+
     - id: printers
       <<: *page_styles
       on_load:
@@ -656,4 +728,31 @@ packages:
   printer_6_widget_sensors: !include { file: widgets/printers/sensors.yaml, vars: {
     uid: printer_6,
     entity_id_prefix: p1s_6
+  }}
+
+  # relays
+  relay_1_widget_sensors: !include { file: widgets/buttons/icon_text_buttons/stateful_sensors.yaml, vars: {
+    uid: relay_1,
+    entity_id: switch.relay_1
+  }}
+
+  relay_2_widget_sensors: !include { file: widgets/buttons/icon_text_buttons/stateful_sensors.yaml, vars: {
+    uid: relay_2,
+    entity_id: switch.relay_2
+  }}
+
+  relay_3_widget_sensors: !include { file: widgets/buttons/icon_text_buttons/stateful_sensors.yaml, vars: {
+    uid: relay_3,
+    entity_id: switch.relay_3
+  }}
+
+  # virtual lights - tükrözik a Home Assistant lámpák állapotát
+  virtual_light_1_widget_sensors: !include { file: widgets/buttons/icon_text_buttons/stateful_sensors.yaml, vars: {
+    uid: virtual_light_1,
+    entity_id: binary_sensor.virtual_light_1_state
+  }}
+
+  virtual_light_2_widget_sensors: !include { file: widgets/buttons/icon_text_buttons/stateful_sensors.yaml, vars: {
+    uid: virtual_light_2,
+    entity_id: binary_sensor.virtual_light_2_state
   }}

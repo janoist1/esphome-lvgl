@@ -7,7 +7,7 @@ logger:
   baud_rate: 0 # serial log off
 
 substitutions:
-  home_page: lighting_1
+  home_page: all
 
 packages:
   common: !include common.yaml
@@ -52,7 +52,25 @@ switch:
       pcf8574: pcf8575_hub
       number: 5
       mode: output
-      inverted: true
+      inverted: false
+
+# Script-ek a Home Assistant lámpák vezérléséhez
+script:
+  - id: toggle_konyha_folyoso
+    then:
+      - logger.log: "Konyha folyoso gomb megnyomva"
+      - homeassistant.action:
+          action: light.toggle
+          data:
+            entity_id: light.konyha_folyoso_light
+      - logger.log: "Home Assistant akció elküldve"
+
+  - id: toggle_nappali_eloszto
+    then:
+      - homeassistant.action:
+          action: switch.toggle
+          data:
+            entity_id: switch.kanape_melletti_eloszto_switch
 
 binary_sensor:
   - platform: gpio
@@ -95,6 +113,19 @@ binary_sensor:
       then:
         - lambda: |-
             ESP_LOGI("sensor", "Sensor 3 state: %s", x ? "ON" : "OFF");
+
+  # Home Assistant lámpák állapotának tükrözése
+  - platform: homeassistant
+    name: "Konyha Folyosó Állapot"
+    id: virtual_light_1_state
+    entity_id: light.konyha_folyoso_light
+    trigger_on_initial_state: true
+
+  - platform: homeassistant
+    name: "Nappali Elosztó Állapot"
+    id: virtual_light_2_state
+    entity_id: switch.kanape_melletti_eloszto_switch
+    trigger_on_initial_state: true
 
 sensor:
 # # DHT11 Szenzor

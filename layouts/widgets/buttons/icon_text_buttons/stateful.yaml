@@ -6,7 +6,7 @@
 # - icon_off
 # - text
 
-# button:
+# button: # do not uncomment this, it will break the button
   id: ${uid}_widget
   width: ${width}
   height: ${height}
@@ -27,6 +27,7 @@
         id: ${uid}_widget_off
         text: ${icon_off}
         text_font: mdi_md
+        text_color: 0xFFf720
         align: TOP_LEFT
         hidden: true
     - label:
